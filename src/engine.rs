@@ -14,6 +14,7 @@ pub struct Game {
     pub board: Board,
     pub turn: Turn,
     pub patterns: patterns::Patterns,
+    pub patterns_pond: patterns::PatternsCountPlayerPonderation,
     pub moves: Vec<Col>,
 }
 
@@ -98,11 +99,12 @@ impl Game {
     ///     }
     /// }
     /// ```
-    pub fn new(start: Player) -> Game {
+    pub fn new(start: Player, ppc: patterns::PatternsCountPlayerPonderation) -> Game {
         Game {
             board: empty_board(),
             turn: Turn::P(start),
             patterns: patterns::Patterns::init(),
+            patterns_pond: ppc,
             moves: vec![],
         }
     }
@@ -222,7 +224,6 @@ impl Game {
     ///     assert!(egame.is_err())
     /// }
     /// ```
-
     pub fn play(mut self, col: Col) -> std::result::Result<Game, Game> {
         let next_turn = |patterns: &patterns::Patterns, player| {
             let switch_player = |player| match player {
@@ -241,6 +242,7 @@ impl Game {
                 self.board.0[row.0 as usize][col.0 as usize] = Cell::P(player);
                 self.patterns = patterns::get_patterns(&self.board);
                 self.turn = next_turn(&self.patterns, player);
+                self.moves.push(col);
                 Ok(self)
             }
             _ => Err(self),
@@ -251,6 +253,31 @@ impl Game {
         match self.play(col) {
             Ok(game) => game,
             Err(game) => game,
+        }
+    }
+
+    pub fn eval(&self) -> patterns::Eval {
+        self.patterns.eval(self.turn, &self.patterns_pond)
+    }
+
+    pub fn undo(mut self) -> std::result::Result<Game, Game> {
+        let switch_player = |t: Turn| match t {
+            Turn::P(Player::O) => Turn::P(Player::X),
+            Turn::P(Player::X) => Turn::P(Player::O),
+            Turn::Won(Player::O) => Turn::P(Player::O),
+            Turn::Won(Player::X) => Turn::P(Player::X),
+        };
+        //  -------
+        match self.moves.pop() {
+            Some(col) => {
+                if self.board.remove_from_col(col) {
+                    self.turn = switch_player(self.turn);
+                    Ok(self)
+                } else {
+                    Err(self)
+                }
+            }
+            None => Err(self),
         }
     }
 }
@@ -413,6 +440,17 @@ impl Board {
     ///
     pub fn is_valid_col_to_play(&self, col: Col) -> bool {
         self.0[0][col.0 as usize] == Cell::Empty
+    }
+
+    #[must_use]
+    pub fn remove_from_col(&mut self, col: Col) -> bool {
+        for r in 0..NROWS {
+            if self.0[r as usize][col.0 as usize] != Cell::Empty {
+                self.0[r as usize][col.0 as usize] = Cell::Empty;
+                return true;
+            }
+        }
+        false
     }
 
     fn row_for_play(&self, col: Col) -> Option<Row> {

@@ -75,8 +75,8 @@ impl Renderable<Model> for Model {
 
         html! {
             <div><h1>{"Connect 4"}</h1></div>
-            <HGame:/>
             // <div>{view_config_game()}</div>
+            <HGame:/>
         }
     }
 }

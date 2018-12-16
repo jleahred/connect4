@@ -12,37 +12,54 @@
 ///
 use super::*;
 
-impl PatternsCountPlayerPonderation {
-    fn config() -> Self {
-        PatternsCountPlayerPonderation {
-            player_current: PatternsCountPonderation {
-                next_move_wins: 1.0,
-                imposible_avoid: 0.5,
-                vert_consecutive_hole_3inline: 0.3,
-                line3: 0.1,
-                line2: 0.01,
-                line1: 0.001,
-            },
-            player_other: PatternsCountPonderation {
-                next_move_wins: 0.3,
-                imposible_avoid: 0.5,
-                vert_consecutive_hole_3inline: 0.3,
-                line3: 0.1,
-                line2: 0.01,
-                line1: 0.001,
-            },
-        }
-    }
-}
-
 pub enum Patterns {
     FourInLine,
     P(PatternsCountPlayer),
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd)]
+pub enum Eval {
+    Value(i64),
+    Winner,
+    Losser,
+}
+
+impl Eval {
+    pub fn invert(&self) -> Self {
+        match self {
+            Eval::Winner => Eval::Losser,
+            Eval::Losser => Eval::Winner,
+            Eval::Value(l) => Eval::Value(-l),
+        }
+    }
+}
+impl std::cmp::Ord for Eval {
+    fn cmp(&self, other: &Eval) -> std::cmp::Ordering {
+        match (self, other) {
+            (Eval::Winner, Eval::Winner) => std::cmp::Ordering::Equal,
+            (Eval::Losser, Eval::Losser) => std::cmp::Ordering::Equal,
+            (_, Eval::Winner) => std::cmp::Ordering::Less,
+            (Eval::Winner, _) => std::cmp::Ordering::Greater,
+            (_, Eval::Losser) => std::cmp::Ordering::Greater,
+            (Eval::Losser, _) => std::cmp::Ordering::Less,
+            (Eval::Value(l), Eval::Value(r)) => l.cmp(r),
+        }
+    }
+}
+
 impl Patterns {
     pub(crate) fn init() -> Self {
         Patterns::P(PatternsCountPlayer::init())
+    }
+
+    pub fn eval(&self, turn: Turn, pp: &PatternsCountPlayerPonderation) -> Eval {
+        match turn {
+            Turn::Won(_) => Eval::Winner,
+            Turn::P(player) => match self {
+                Patterns::FourInLine => Eval::Winner,
+                Patterns::P(pcp) => Eval::Value(pcp.eval_with(player, pp)),
+            },
+        }
     }
 }
 
@@ -60,28 +77,23 @@ impl PatternsCountPlayer {
             holes3: [[Cell::Empty; NCOLS as usize]; NROWS as usize],
         }
     }
-    pub fn eval_with(&self, turn: Turn, pond: &PatternsCountPlayerPonderation) -> f32 {
+    pub fn eval_with(&self, turn: Player, pond: &PatternsCountPlayerPonderation) -> i64 {
         let eval_player = |player: &PatternsCount, pl_pond: &PatternsCountPonderation| {
-            (f32::from(player.imposible_avoid)) * pl_pond.imposible_avoid
-                + (f32::from(player.line1)) * pl_pond.line1
-                + (f32::from(player.line2)) * pl_pond.line2
-                + (f32::from(player.line3)) * pl_pond.line3
-                + (f32::from(player.next_move_wins)) * pl_pond.next_move_wins
-                + (f32::from(player.vert_consecutive_hole_3inline))
-                    * pl_pond.vert_consecutive_hole_3inline
+            let fval = (f64::from(player.imposible_avoid)) * pl_pond.imposible_avoid
+                + (f64::from(player.line1)) * pl_pond.line1
+                + (f64::from(player.line2)) * pl_pond.line2
+                + (f64::from(player.line3)) * pl_pond.line3
+                + (f64::from(player.next_move_wins)) * pl_pond.next_move_wins
+                + (f64::from(player.vert_consecutive_hole_3inline))
+                    * pl_pond.vert_consecutive_hole_3inline;
+            (fval * 1_000_000.0) as i64
         };
         let eval_o = || eval_player(&self.player_o, &pond.player_current);
         let eval_x = || eval_player(&self.player_x, &pond.player_other);
         match turn {
-            Turn::P(Player::O) => eval_x() - eval_o(),
-            Turn::P(Player::X) => eval_o() - eval_x(),
-            Turn::Won(Player::O) => 10000.0,
-            Turn::Won(Player::X) => 10000.0,
+            Player::O => eval_o() - eval_x(),
+            Player::X => eval_x() - eval_o(),
         }
-    }
-    pub fn eval(&self, turn: Turn) -> f32 {
-        let pond = PatternsCountPlayerPonderation::config();
-        self.eval_with(turn, &pond)
     }
 }
 
@@ -113,12 +125,12 @@ impl PatternsCount {
 }
 
 pub struct PatternsCountPonderation {
-    next_move_wins: f32,
-    imposible_avoid: f32,
-    vert_consecutive_hole_3inline: f32,
-    line3: f32,
-    line2: f32,
-    line1: f32,
+    pub next_move_wins: f64,
+    pub imposible_avoid: f64,
+    pub vert_consecutive_hole_3inline: f64,
+    pub line3: f64,
+    pub line2: f64,
+    pub line1: f64,
 }
 
 pub(crate) fn get_patterns(board: &Board) -> Patterns {

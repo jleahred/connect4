@@ -1,4 +1,6 @@
 use crate::engine;
+use crate::engine::patterns::PatternsCountPlayerPonderation as PCPP;
+use crate::engine::patterns::PatternsCountPonderation as PCP;
 use crate::*;
 use yew::prelude::*;
 // use yew::services::ConsoleService;
@@ -31,29 +33,52 @@ impl Default for Properties {
 
 impl Model {}
 
+fn pattern_ponderation() -> PCPP {
+    PCPP {
+        player_current: PCP {
+            next_move_wins: 1.0,
+            imposible_avoid: 55.5,
+            vert_consecutive_hole_3inline: 0.3,
+            line3: 0.1,
+            line2: 0.01,
+            line1: 0.001,
+        },
+        player_other: PCP {
+            next_move_wins: 100.0,
+            imposible_avoid: 55.5,
+            vert_consecutive_hole_3inline: 0.3,
+            line3: 0.1,
+            line2: 0.01,
+            line1: 0.001,
+        },
+    }
+}
+
 impl Component for Model {
     type Message = Msg;
     type Properties = Properties;
 
     fn create(p: Self::Properties, _: ComponentLink<Self>) -> Self {
-        let game = engine::Game::new(p.config.start);
+        let game = engine::Game::new(p.config.start, pattern_ponderation());
         let config = p.config;
-        let game = check_computer_move(game, &config);
+        let game = move_computer_if_turn(game, &config);
         Model { game, config }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let try_play = |game: &mut engine::Game, c| {
+        let try_play = |game: &mut engine::Game, c, config: &Config| {
             if let Some(col) = engine::Col::b(c) {
-                idata::steal_borrow(game, &|s: engine::Game| s.try_play(col))
+                idata::steal_borrow(game, &|s: engine::Game| match s.play(col) {
+                    Ok(game) => move_computer_if_turn(game, config),
+                    Err(game) => game,
+                })
             }
         };
 
         match msg {
-            Msg::Click(col) => try_play(&mut self.game, col),
+            Msg::Click(col) => try_play(&mut self.game, col, &self.config),
         };
 
-        rmut_check_computer_move(&mut self.game, &self.config);
         true
     }
     fn change(&mut self, _props: Self::Properties) -> ShouldRender {
@@ -112,12 +137,7 @@ impl Renderable<Model> for Model {
         };
 
         let pattern_count = || {
-            let get_pos_eval = || match &self.game.patterns {
-                crate::engine::patterns::Patterns::P(pcp) => {
-                    format!("{:?}", pcp.eval(self.game.turn))
-                }
-                _ => "we have a winner".to_string(),
-            };
+            let get_pos_eval = || format!("{:?}", self.game.eval());
             let get_pattern_debug_txt = || match &self.game.patterns {
                 crate::engine::patterns::Patterns::P(pcp) => {
                     (format!("{:?}", pcp.player_o), format!("{:?}", pcp.player_x))
@@ -144,24 +164,17 @@ impl Renderable<Model> for Model {
     }
 }
 
-fn rmut_check_computer_move(game: &mut engine::Game, config: &Config) {
-    idata::steal_borrow(game, &|sgame: engine::Game| {
-        check_computer_move(sgame, config)
-    })
-}
-
-fn check_computer_move(game: engine::Game, config: &Config) -> engine::Game {
+fn move_computer_if_turn(game: engine::Game, config: &Config) -> engine::Game {
+    // game
     let finished_game = match game.turn {
         engine::Turn::P(_) => false,
         engine::Turn::Won(_) => true,
     };
     let rgame = if let ConfigPlayers::CMachine(mp) = config.players {
         if (game.moves.len() % 2 == 0) == (config.start == mp) && !finished_game {
-            let (game, col) = crate::engine::minmax::get_best_move(game);
-            if let Some(c) = col {
-                game.play(c)
-            } else {
-                unreachable!()
+            match crate::engine::minmax::get_best_move(game) {
+                Ok((game, col, _eval)) => game.play(col),
+                Err(_game) => unreachable!(),
             }
         } else {
             Ok(game)
