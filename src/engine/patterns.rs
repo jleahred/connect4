@@ -302,7 +302,7 @@ fn score_3line(
     mut patt: PatternsCountPlayer,
     board: &Board,
 ) -> PatternsCountPlayer {
-    let register_hole = |cc: &CellsCoord, patt: &mut PatternsCountPlayer, player: Player| -> () {
+    let register_hole = |cc: &CellsCoord, patt: &mut PatternsCountPlayer, player: Player| {
         if let Cell::Empty = patt.holes3[cc.row][cc.col] {
             patt.holes3[cc.row][cc.col] = Cell::P(player)
         };

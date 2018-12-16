@@ -18,9 +18,9 @@ At the time I was tempted to program it for windows in Builder-C++.
 
 Then I thought about multi-platform with C++/Qt
 
-But it still didn't convince me. If I want someone to spend a couple of minutes testing the game, the deployment has to be very simple and inferior in time.
+But it still didn't convince me. If I want someone to spend a couple of minutes testing the game, the deployment has to be very simple and less time to run it.
 
-And that's a web program.
+And that's what we achieve with a web program.
 
 I wasn't convinced enough with Dart, nor with typescript, not even with the wonderful Elm...
 

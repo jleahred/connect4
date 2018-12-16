@@ -2,6 +2,7 @@ const NCOLS: u8 = 7;
 const NROWS: u8 = 6;
 const NLINE: u8 = 4;
 
+pub(crate) mod minmax;
 pub(crate) mod patterns;
 
 #[cfg(test)]
@@ -13,6 +14,7 @@ pub struct Game {
     pub board: Board,
     pub turn: Turn,
     pub patterns: patterns::Patterns,
+    pub moves: Vec<Col>,
 }
 
 /// Player to move, or winner of game
@@ -101,6 +103,7 @@ impl Game {
             board: empty_board(),
             turn: Turn::P(start),
             patterns: patterns::Patterns::init(),
+            moves: vec![],
         }
     }
 

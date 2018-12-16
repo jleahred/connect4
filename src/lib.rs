@@ -9,39 +9,74 @@ extern crate yew;
 extern crate idata;
 
 mod html;
-use crate::html::board::Board as HBoard;
+// use crate::html::config::Model as HConfig;
+use crate::html::game::Model as HGame;
 
 use yew::prelude::*;
 
-#[derive(Debug)]
-pub struct Model {
+pub enum Model {
     // console: ConsoleService,
+    Config,
+    Game,
 }
 
-pub enum Msg {}
+pub enum Msg {
+    StartGame(Config),
+}
 
 //  ----------
+
+#[derive(PartialEq, Clone)]
+pub struct Config {
+    start: engine::Player,
+    players: ConfigPlayers,
+}
+impl Config {
+    fn init() -> Self {
+        Config {
+            start: engine::Player::O,
+            players: ConfigPlayers::CMachine(engine::Player::O),
+        }
+    }
+}
+
+#[derive(PartialEq, Clone)]
+enum ConfigPlayers {
+    CMachine(engine::Player),
+    TwoPlayers,
+}
 
 impl Component for Model {
     type Message = Msg;
     type Properties = ();
 
     fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
-        Model {
-            // console: ConsoleService::new(),
-        }
+        Model::Config
     }
 
-    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        match msg {
+            Msg::StartGame(_cfg) => std::mem::swap(self, &mut Model::Game),
+        }
         true
     }
 }
 
 impl Renderable<Model> for Model {
     fn view(&self) -> Html<Self> {
+        // let view_config_game = || match self {
+        //     Model::Config => html! {
+        //         <><HConfig:  onstart= Msg::StartGame,/></>
+        //     },
+        //     Model::Game => html! {
+        //         <><HGame:/></>
+        //     },
+        // };
+
         html! {
             <div><h1>{"Connect 4"}</h1></div>
-            <HBoard:/>
+            <HGame:/>
+            // <div>{view_config_game()}</div>
         }
     }
 }

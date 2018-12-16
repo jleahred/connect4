@@ -2,13 +2,23 @@
     width: 100%;
 }
 
+.select_color {
+    width: 100px;
+}
+
 .game {
     /* font-family: Helvetica, Arial, "Lucida Grande", sans-serif; */
     width: 340px;
     /* text-align: center */
 }
 
-.board {
+.select_color {
+    height: 25px;
+    width: 25px;
+}
+
+.board,
+.select_color {
     border: 0px solid #8585ad;
     /* box-shadow: 7px 7px 28px 0px rgba(50, 50, 50, 0.6); */
     padding: 7px;
@@ -16,13 +26,20 @@
     border-radius: 8px 8px 8px 8px
 }
 
-td {
+.td_board,
+.select_color {
     border: 0px solid #8585ad;
     border-radius: 2000px;
     /* box-shadow: inset 7px 7px 20px 0px rgba(50, 50, 50, 0.4); */
     opacity: 1;
+    display: inline-block;
+}
+
+.td_board {
     height: 40px;
-    background: #fff
+    width: 40px;
+    background: #fff;
+    margin-left: 3px
 }
 
 
@@ -35,7 +52,7 @@ td {
     background: #8585ad
 }
 
-td:hover {
+.td_board:hover {
     opacity: 0.4
 }
 
@@ -50,7 +67,7 @@ td.yellow {
 }
 
 .yellow {
-    background: #ff0
+    background: #ff0;
 }
 
 .red {
@@ -58,7 +75,9 @@ td.yellow {
     color: #fff
 }
 
-h1 {
+h1,
+h2,
+p {
     text-align: center;
 }
 
@@ -67,8 +86,9 @@ h1 {
         width: 405px;
     }
 
-    td {
+    .td_board {
         height: 47px;
+        width: 47px;
         border-width: 1px
     }
 }
@@ -78,8 +98,9 @@ h1 {
         width: 503px;
     }
 
-    td {
+    .td_board {
         height: 59px;
+        width: 59px;
         border-width: 2px
     }
 
@@ -94,12 +115,13 @@ h1 {
         width: 601px;
     }
 
-    td {
+    .td_board {
         height: 71px;
+        width: 71px;
         border-width: 3px
     }
 
-    td {
+    .td_board {
         box-shadow: inset 15px 15px 15px 0px rgba(50, 50, 50, 0.25)
     }
 
@@ -118,12 +140,13 @@ h1 {
         width: 249px;
     }
 
-    td {
+    .td_board {
         height: 29px;
+        width: 29px;
         border-width: 0
     }
 
-    td {
+    .td_board {
         box-shadow: inset 3px 3px 10px 0px rgba(50, 50, 50, 0.4)
     }
 
@@ -142,8 +165,10 @@ h1 {
         width: 200px;
     }
 
-    td {
+    .td_board {
         height: 22px;
+        width: 22px;
+        margin-left: 1px
     }
 
     * {
