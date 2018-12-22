@@ -2,8 +2,8 @@ const NCOLS: u8 = 7;
 const NROWS: u8 = 6;
 const NLINE: u8 = 4;
 
-pub(crate) mod minmax;
-pub(crate) mod patterns;
+pub mod minmax;
+pub mod patterns;
 
 #[cfg(test)]
 mod test;
@@ -27,13 +27,13 @@ pub enum Turn {
 }
 
 /// Player options
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Player {
     O,
     X,
 }
 
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Col(u8);
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Row(u8);

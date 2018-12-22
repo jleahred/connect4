@@ -17,7 +17,7 @@ pub enum Patterns {
     P(PatternsCountPlayer),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Eval {
     Value(i64),
     Winner,
@@ -33,6 +33,13 @@ impl Eval {
         }
     }
 }
+
+impl PartialOrd for Eval {
+    fn partial_cmp(&self, other: &Eval) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
 impl std::cmp::Ord for Eval {
     fn cmp(&self, other: &Eval) -> std::cmp::Ordering {
         match (self, other) {
@@ -77,6 +84,8 @@ impl PatternsCountPlayer {
             holes3: [[Cell::Empty; NCOLS as usize]; NROWS as usize],
         }
     }
+
+    //  Eval will return the evaluation for last player played
     pub fn eval_with(&self, turn: Player, pond: &PatternsCountPlayerPonderation) -> i64 {
         let eval_player = |player: &PatternsCount, pl_pond: &PatternsCountPonderation| {
             let fval = (f64::from(player.imposible_avoid)) * pl_pond.imposible_avoid
@@ -91,15 +100,15 @@ impl PatternsCountPlayer {
         let eval_o = || eval_player(&self.player_o, &pond.player_current);
         let eval_x = || eval_player(&self.player_x, &pond.player_other);
         match turn {
-            Player::O => eval_o() - eval_x(),
-            Player::X => eval_x() - eval_o(),
+            Player::O => eval_x() - eval_o(),
+            Player::X => eval_o() - eval_x(),
         }
     }
 }
 
 pub struct PatternsCountPlayerPonderation {
-    pub(crate) player_current: PatternsCountPonderation,
-    pub(crate) player_other: PatternsCountPonderation,
+    pub player_current: PatternsCountPonderation,
+    pub player_other: PatternsCountPonderation,
 }
 
 #[derive(Debug)]

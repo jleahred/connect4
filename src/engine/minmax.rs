@@ -15,26 +15,41 @@ impl BestMoves {
         }
     }
     fn process_move(mut self, col: Col, eval: &Eval) -> Self {
-        let improved_val = |self_eval: &Option<Eval>, eval: &Eval| {
+        let cmp_eval = |self_eval: &Option<Eval>, eval: &Eval| {
             if let Some(seval) = self_eval.clone() {
-                seval < *eval
+                seval.cmp(eval)
             } else {
-                true
+                std::cmp::Ordering::Less
             }
         };
-
-        if improved_val(&self.eval, eval) {
-            self.eval = Some(eval.clone());
-            self.cols.clear();
-            self.cols.push(col)
-        }
-
+        match cmp_eval(&self.eval, eval) {
+            std::cmp::Ordering::Less => {
+                self.eval = Some(eval.clone());
+                self.cols.clear();
+                self.cols.push(col);
+            }
+            std::cmp::Ordering::Equal => {
+                self.eval = Some(eval.clone());
+                self.cols.push(col);
+            }
+            std::cmp::Ordering::Greater => (),
+        };
         self
+    }
+    fn get_random_col_eval(&self) -> Option<(Col, Eval)> {
+        use rand::Rng;
+        match (self.cols.len(), self.eval.clone()) {
+            (0, None) => None,
+            (len, Some(eval)) => Some((self.cols[rand::thread_rng().gen_range(0, len)], eval)),
+            _ => unreachable!(),
+        }
     }
 }
 
-pub(crate) fn get_best_move(game: Game) -> Result<(Game, Col, Eval), Game> {
-    Ok(generate_step(game, 1))
+pub fn get_best_move(game: Game) -> Result<(Game, Col, Eval), Game> {
+    let (game, col, eval) = generate_step(game, 1);
+    let eval = eval.invert();
+    Ok((game, col, eval))
 }
 
 fn generate_step(game: Game, pend_steps: u8) -> (Game, Col, Eval) {
@@ -42,8 +57,9 @@ fn generate_step(game: Game, pend_steps: u8) -> (Game, Col, Eval) {
         let mut game_bm = (game, BestMoves::init());
         for c in 0..NCOLS {
             let bm = game_bm.1;
-            game_bm = match move_col(game_bm.0, Col(c), pend_steps) {
-                Ok((game, col, eval)) => match game.undo() {
+            let col = Col(c);
+            game_bm = match move_col(game_bm.0, col, pend_steps) {
+                Ok((game, eval)) => match game.undo() {
                     Ok(game) => (game, bm.process_move(col, &eval)),
                     _ => unreachable!(),
                 },
@@ -53,24 +69,27 @@ fn generate_step(game: Game, pend_steps: u8) -> (Game, Col, Eval) {
         game_bm
     };
 
-    match (bm.cols.is_empty(), bm.eval) {
-        (false, Some(eval)) => (game, bm.cols[0], eval.invert()),
+    match bm.get_random_col_eval() {
+        Some((col, eval)) => (game, col, eval.invert()),
         _ => unreachable!(),
     }
 }
 
-fn move_col(game: Game, col: Col, pend_steps: u8) -> Result<(Game, Col, Eval), Game> {
+fn move_col(game: Game, col: Col, pend_steps: u8) -> Result<(Game, Eval), Game> {
     match game.play(col) {
         Ok(game) => {
             if pend_steps == 0 {
                 let eval = game.eval();
-                Ok((game, col, eval))
+                Ok((game, eval))
             } else {
                 match game.turn {
-                    Turn::P(_) => Ok(generate_step(game, pend_steps - 1)),
+                    Turn::P(_) => {
+                        let (game, _col, eval) = generate_step(game, pend_steps - 1);
+                        Ok((game, eval))
+                    }
                     Turn::Won(_) => {
                         let eval = game.eval();
-                        Ok((game, col, eval))
+                        Ok((game, eval))
                     }
                 }
             }

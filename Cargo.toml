@@ -8,3 +8,4 @@ edition = "2018"
 stdweb = "0.4.2"
 yew = { git = "https://github.com/DenisKolodin/yew" }
 idata = { git = "https://github.com/jleahred/idata.git" }
+rand = "0.4.0"
