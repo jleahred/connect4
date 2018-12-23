@@ -42,8 +42,9 @@ impl BestMoves {
         use rand::Rng;
         match (self.cols.len(), self.eval.clone()) {
             (0, None) => None,
-            (len, Some(eval)) => Some((self.cols[rand::thread_rng().gen_range(0, len)], eval)),
-            _ => unreachable!(),
+            // (len, Some(eval)) => Some((self.cols[rand::thread_rng().gen_range(0, len)], eval)),
+            (len, Some(eval)) => Some((self.cols[0], eval)),
+            _ => None
         }
     }
 }
@@ -61,10 +62,9 @@ fn generate_step(game: Game, pend_steps: u8) -> Result<(Game, Col, Eval), Game> 
             let bm = game_bm.1;
             let col = Col(c);
             game_bm = match move_col(game_bm.0, col, pend_steps) {
-                Ok((game, eval)) => match game.undo() {
-                    Ok(game) => (game, bm.process_move(col, &eval)),
-                    _ => unreachable!(),
-                },
+                 Ok((game, eval)) =>  {
+                        (game.undo()?, bm.process_move(col, &eval))
+                 },
                 Err(game) => (game, bm),
             };
         }

@@ -9,7 +9,7 @@ extern crate yew;
 extern crate idata;
 
 mod html;
-// use crate::html::config::Model as HConfig;
+use crate::html::config::Model as HConfig;
 use crate::html::game::Model as HGame;
 
 use yew::prelude::*;
@@ -64,19 +64,19 @@ impl Component for Model {
 
 impl Renderable<Model> for Model {
     fn view(&self) -> Html<Self> {
-        // let view_config_game = || match self {
-        //     Model::Config => html! {
-        //         <><HConfig:  onstart= Msg::StartGame,/></>
-        //     },
-        //     Model::Game => html! {
-        //         <><HGame:/></>
-        //     },
-        // };
+        let view_config_game = || match self {
+            Model::Config => html! {
+                <><HConfig:  onstart= Msg::StartGame,/></>
+            },
+            Model::Game => html! {
+                <><HGame:/></>
+            },
+        };
 
         html! {
             <div><h1>{"Connect 4"}</h1></div>
-            // <div>{view_config_game()}</div>
-            <HGame:/>
+            <div>{view_config_game()}</div>
+            // <HGame:/>
         }
     }
 }

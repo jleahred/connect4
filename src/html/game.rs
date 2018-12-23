@@ -142,7 +142,6 @@ impl Renderable<Model> for Model {
 }
 
 fn move_computer_if_turn(game: engine::Game, config: &Config) -> engine::Game {
-    // game
     let finished_game = match game.turn {
         engine::Turn::P(_) => false,
         engine::Turn::F(_) => true,
