@@ -5,8 +5,32 @@ const NLINE: u8 = 4;
 pub mod minmax;
 pub mod patterns;
 
+use self::patterns::PatternsCountPlayerPonderation as PCPP;
+use self::patterns::PatternsCountPonderation as PCP;
+
 #[cfg(test)]
 mod test;
+
+fn pattern_ponderation() -> PCPP {
+    PCPP {
+        player_current: PCP {
+            next_move_wins: 1.0,
+            imposible_avoid: 55.5,
+            vert_consecutive_hole_3inline: 0.3,
+            line3: 0.1,
+            line2: 0.01,
+            line1: 0.001,
+        },
+        player_other: PCP {
+            next_move_wins: 100.0,
+            imposible_avoid: 55.5,
+            vert_consecutive_hole_3inline: 0.3,
+            line3: 0.1,
+            line2: 0.01,
+            line1: 0.001,
+        },
+    }
+}
 
 /// Abstract type with game status
 ///
@@ -20,10 +44,18 @@ pub struct Game {
 
 /// Player to move, or winner of game
 ///
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Turn {
     P(Player),
+    F(Finished),
+    // Won(Player),
+    // Draw(Player),
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum Finished {
     Won(Player),
+    Draw(Player),
 }
 
 /// Player options
@@ -99,14 +131,19 @@ impl Game {
     ///     }
     /// }
     /// ```
-    pub fn new(start: Player, ppc: patterns::PatternsCountPlayerPonderation) -> Game {
+    pub fn new(start: Player) -> Game {
         Game {
             board: empty_board(),
             turn: Turn::P(start),
             patterns: patterns::Patterns::init(),
-            patterns_pond: ppc,
+            patterns_pond: pattern_ponderation(),
             moves: vec![],
         }
+    }
+
+    pub fn set_patterns_pond(mut self, pcpp: PCPP) -> Self {
+        self.patterns_pond = pcpp;
+        self
     }
 
     /// Example with one movement
@@ -225,14 +262,16 @@ impl Game {
     /// }
     /// ```
     pub fn play(mut self, col: Col) -> std::result::Result<Game, Game> {
-        let next_turn = |patterns: &patterns::Patterns, player| {
+        let next_turn = |patterns: &patterns::Patterns, player, nmoves| {
             let switch_player = |player| match player {
                 Player::O => Player::X,
                 Player::X => Player::O,
             };
-            match patterns {
-                patterns::Patterns::FourInLine => Turn::Won(player),
-                patterns::Patterns::P(ref _pc) => Turn::P(switch_player(player)),
+            let full = nmoves == (NROWS as usize) * (NCOLS as usize);
+            match (patterns, full) {
+                (patterns::Patterns::FourInLine, _) => Turn::F(Finished::Won(player)),
+                (_, true) => Turn::F(Finished::Draw(player)),
+                (patterns::Patterns::P(ref _pc), _) => Turn::P(switch_player(player)),
             }
         };
 
@@ -241,8 +280,8 @@ impl Game {
             (Some(row), Some(player)) => {
                 self.board.0[row.0 as usize][col.0 as usize] = Cell::P(player);
                 self.patterns = patterns::get_patterns(&self.board);
-                self.turn = next_turn(&self.patterns, player);
                 self.moves.push(col);
+                self.turn = next_turn(&self.patterns, player, self.moves.len());
                 Ok(self)
             }
             _ => Err(self),
@@ -264,8 +303,10 @@ impl Game {
         let switch_player = |t: Turn| match t {
             Turn::P(Player::O) => Turn::P(Player::X),
             Turn::P(Player::X) => Turn::P(Player::O),
-            Turn::Won(Player::O) => Turn::P(Player::O),
-            Turn::Won(Player::X) => Turn::P(Player::X),
+            Turn::F(Finished::Won(Player::O)) => Turn::P(Player::O),
+            Turn::F(Finished::Won(Player::X)) => Turn::P(Player::X),
+            Turn::F(Finished::Draw(Player::O)) => Turn::P(Player::O),
+            Turn::F(Finished::Draw(Player::X)) => Turn::P(Player::X),
         };
         //  -------
         match self.moves.pop() {
@@ -487,7 +528,8 @@ impl std::fmt::Display for Turn {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             Turn::P(player) => write!(f, "next: {}", player),
-            Turn::Won(player) => write!(f, "won: {}", player),
+            Turn::F(Finished::Won(player)) => write!(f, "WINNER: {}", player),
+            Turn::F(Finished::Draw(_player)) => write!(f, "Draw"),
         }
     }
 }

@@ -2,6 +2,8 @@ use super::*;
 use crate::engine::patterns::Eval;
 use crate::engine::{Turn, NCOLS};
 
+const DEPTH: u8 = 1;
+
 struct BestMoves {
     cols: Vec<Col>,
     eval: Option<Eval>,
@@ -47,12 +49,12 @@ impl BestMoves {
 }
 
 pub fn get_best_move(game: Game) -> Result<(Game, Col, Eval), Game> {
-    let (game, col, eval) = generate_step(game, 1);
+    let (game, col, eval) = generate_step(game, DEPTH)?;
     let eval = eval.invert();
     Ok((game, col, eval))
 }
 
-fn generate_step(game: Game, pend_steps: u8) -> (Game, Col, Eval) {
+fn generate_step(game: Game, pend_steps: u8) -> Result<(Game, Col, Eval), Game> {
     let (game, bm) = {
         let mut game_bm = (game, BestMoves::init());
         for c in 0..NCOLS {
@@ -70,8 +72,8 @@ fn generate_step(game: Game, pend_steps: u8) -> (Game, Col, Eval) {
     };
 
     match bm.get_random_col_eval() {
-        Some((col, eval)) => (game, col, eval.invert()),
-        _ => unreachable!(),
+        Some((col, eval)) => Ok((game, col, eval.invert())),
+        _ => Err(game),
     }
 }
 
@@ -84,10 +86,10 @@ fn move_col(game: Game, col: Col, pend_steps: u8) -> Result<(Game, Eval), Game> 
             } else {
                 match game.turn {
                     Turn::P(_) => {
-                        let (game, _col, eval) = generate_step(game, pend_steps - 1);
+                        let (game, _col, eval) = generate_step(game, pend_steps - 1)?;
                         Ok((game, eval))
                     }
-                    Turn::Won(_) => {
+                    Turn::F(_) => {
                         let eval = game.eval();
                         Ok((game, eval))
                     }

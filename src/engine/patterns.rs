@@ -61,7 +61,8 @@ impl Patterns {
 
     pub fn eval(&self, turn: Turn, pp: &PatternsCountPlayerPonderation) -> Eval {
         match turn {
-            Turn::Won(_) => Eval::Winner,
+            Turn::F(Finished::Won(_)) => Eval::Winner,
+            Turn::F(Finished::Draw(_)) => Eval::Value(0),
             Turn::P(player) => match self {
                 Patterns::FourInLine => Eval::Winner,
                 Patterns::P(pcp) => Eval::Value(pcp.eval_with(player, pp)),
@@ -106,6 +107,7 @@ impl PatternsCountPlayer {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct PatternsCountPlayerPonderation {
     pub player_current: PatternsCountPonderation,
     pub player_other: PatternsCountPonderation,
@@ -133,6 +135,7 @@ impl PatternsCount {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct PatternsCountPonderation {
     pub next_move_wins: f64,
     pub imposible_avoid: f64,

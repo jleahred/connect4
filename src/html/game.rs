@@ -1,7 +1,5 @@
 use crate::engine;
-use crate::engine::patterns::PatternsCountPlayerPonderation as PCPP;
-use crate::engine::patterns::PatternsCountPonderation as PCP;
-use crate::*;
+use crate::{idata, yew, Config, ConfigPlayers};
 use yew::prelude::*;
 // use yew::services::ConsoleService;
 
@@ -33,33 +31,12 @@ impl Default for Properties {
 
 impl Model {}
 
-fn pattern_ponderation() -> PCPP {
-    PCPP {
-        player_current: PCP {
-            next_move_wins: 1.0,
-            imposible_avoid: 55.5,
-            vert_consecutive_hole_3inline: 0.3,
-            line3: 0.1,
-            line2: 0.01,
-            line1: 0.001,
-        },
-        player_other: PCP {
-            next_move_wins: 100.0,
-            imposible_avoid: 55.5,
-            vert_consecutive_hole_3inline: 0.3,
-            line3: 0.1,
-            line2: 0.01,
-            line1: 0.001,
-        },
-    }
-}
-
 impl Component for Model {
     type Message = Msg;
     type Properties = Properties;
 
     fn create(p: Self::Properties, _: ComponentLink<Self>) -> Self {
-        let game = engine::Game::new(p.config.start, pattern_ponderation());
+        let game = engine::Game::new(p.config.start);
         let config = p.config;
         let game = move_computer_if_turn(game, &config);
         Model { game, config }
@@ -168,7 +145,7 @@ fn move_computer_if_turn(game: engine::Game, config: &Config) -> engine::Game {
     // game
     let finished_game = match game.turn {
         engine::Turn::P(_) => false,
-        engine::Turn::Won(_) => true,
+        engine::Turn::F(_) => true,
     };
     let rgame = if let ConfigPlayers::CMachine(mp) = config.players {
         if (game.moves.len() % 2 == 0) == (config.start == mp) && !finished_game {
