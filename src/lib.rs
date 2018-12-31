@@ -17,7 +17,7 @@ use yew::prelude::*;
 pub enum Model {
     // console: ConsoleService,
     Config,
-    Game,
+    Game(Config),
 }
 
 pub enum Msg {
@@ -56,7 +56,7 @@ impl Component for Model {
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::StartGame(_cfg) => std::mem::swap(self, &mut Model::Game),
+            Msg::StartGame(cfg) => std::mem::swap(self, &mut Model::Game(cfg)),
         }
         true
     }
@@ -64,18 +64,18 @@ impl Component for Model {
 
 impl Renderable<Model> for Model {
     fn view(&self) -> Html<Self> {
-        let view_config_game = || match self {
+        let view_config_and_game = || match self {
             Model::Config => html! {
                 <><HConfig:  onstart= Msg::StartGame,/></>
             },
-            Model::Game => html! {
-                <><HGame:/></>
+            Model::Game(cfg) => html! {
+                <><HGame: config=cfg, /></>
             },
         };
 
         html! {
             <div><h1>{"Connect 4"}</h1></div>
-            <div>{view_config_game()}</div>
+            <div>{view_config_and_game()}</div>
             // <HGame:/>
         }
     }

@@ -15,7 +15,7 @@ pub enum Msg {
 
 #[derive(PartialEq, Clone)]
 pub struct Properties {
-    config: Config,
+    pub config: Config,
     // pub onnewgame: Option<Callback<(Config)>>,
 }
 
@@ -58,8 +58,13 @@ impl Component for Model {
 
         true
     }
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-        true
+    fn change(&mut self, Self::Properties { config }: Self::Properties) -> ShouldRender {
+        if config != self.config {
+            self.config = config;
+            true
+        } else {
+            false
+        }
     }
 }
 
