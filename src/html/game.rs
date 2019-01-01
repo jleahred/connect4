@@ -135,12 +135,25 @@ impl Renderable<Model> for Model {
             }
         };
 
+        let moves = || {
+            let moves_string = || -> String {
+                self.game
+                    .moves
+                    .iter()
+                    .fold("".to_string(), |acc, c| format!("{} {}", acc, c))
+            };
+            html! {
+                <>
+                <p>{moves_string()}</p>
+                </>
+            }
+        };
+
         html! {
             <div class="game",>
                 {board()}
-            </div>
-            {pattern_count()}
-            </div>
+            </div>{moves()}</div>
+            </div>{pattern_count()}</div>
             </div>
         }
     }

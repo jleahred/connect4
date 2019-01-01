@@ -91,6 +91,12 @@ impl Col {
     }
 }
 
+impl std::fmt::Display for Col {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "c{}", self.0)
+    }
+}
+
 impl Row {
     pub fn b(v: u8) -> Option<Self> {
         if v < NROWS {
