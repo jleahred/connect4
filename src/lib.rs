@@ -44,6 +44,7 @@ impl Config {
 enum ConfigPlayers {
     CMachine(engine::Player),
     TwoPlayers,
+    Analisys,
 }
 
 impl Component for Model {

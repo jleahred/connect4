@@ -98,12 +98,17 @@ impl PatternsCountPlayer {
                     * pl_pond.vert_consecutive_hole_3inline;
             (fval * 1_000_000.0) as i64
         };
-        let eval_o = || eval_player(&self.player_o, &pond.player_current);
-        let eval_x = || eval_player(&self.player_x, &pond.player_other);
-        match turn {
-            Player::O => eval_x() - eval_o(),
-            Player::X => eval_o() - eval_x(),
-        }
+        let (curr, other) = match turn {
+            Player::O => (
+                eval_player(&self.player_o, &pond.player_other),
+                eval_player(&self.player_x, &pond.player_current),
+            ),
+            Player::X => (
+                eval_player(&self.player_x, &pond.player_other),
+                eval_player(&self.player_o, &pond.player_current),
+            ),
+        };
+        (other - curr)
     }
 }
 
@@ -328,8 +333,11 @@ fn score_3line(
 ) -> PatternsCountPlayer {
     let register_hole = |cc: &CellsCoord, patt: &mut PatternsCountPlayer, player: Player| {
         if let Cell::Empty = patt.holes3[cc.row][cc.col] {
-            patt.holes3[cc.row][cc.col] = Cell::P(player)
-        };
+            patt.holes3[cc.row][cc.col] = Cell::P(player);
+            true
+        } else {
+            false
+        }
     };
     let get_player = |cl: &CellsLine, board: &Board| match (
         get_cell_from_coord(&cl.0[0], board),
@@ -341,19 +349,33 @@ fn score_3line(
     };
     //  ---------
     let (count_po, count_px, holes) = count_and_holes_4cells(cl, board);
-
-    let mut oplayer_patt = match (count_po, count_px) {
-        (3, 0) => Some(&mut patt.player_o),
-        (0, 3) => Some(&mut patt.player_x),
-        _ => None,
-    };
-    if let Some(ref mut player_patt) = oplayer_patt {
+    let update_3 = |player_patt: &mut PatternsCount, created_new_hole: bool| {
         player_patt.line3 += 1;
-        if inmediate_cell(&Some(holes[0]), board) {
+        if inmediate_cell(&Some(holes[0]), board) && created_new_hole {
             player_patt.next_move_wins += 1;
         }
-        register_hole(&holes[0], &mut patt, get_player(cl, board));
-    }
+    };
+
+    let created_new_hole = match (count_po == 3 || count_px == 3, holes.is_empty()) {
+        (true, false) => register_hole(&holes[0], &mut patt, get_player(cl, board)),
+        _ => false,
+    };
+    // let created_new_hole = if count_po == 3 || count_px == 3 {
+    //     if holes.len() > 0 {
+    //         register_hole(&holes[0], &mut patt, get_player(cl, board))
+    //     } else {
+    //         false
+    //     }
+    // } else {
+    //     false
+    // };
+
+    match (count_po, count_px) {
+        (3, 0) => update_3(&mut patt.player_o, created_new_hole),
+        (0, 3) => update_3(&mut patt.player_x, created_new_hole),
+        _ => (),
+    };
+
     patt
 }
 

@@ -2,7 +2,15 @@ use super::*;
 use crate::engine::patterns::Eval;
 use crate::engine::{Turn, NCOLS};
 
-const DEPTH: u8 = 1;
+pub fn get_best_move(game: Game, depth: u8) -> Result<(Game, Col, Eval), Game> {
+    if game.moves.is_empty() {
+        Ok((game, Col(3), Eval::Value(0)))
+    } else {
+        let (game, col, eval) = generate_step(game, depth)?;
+        let eval = eval.invert();
+        Ok((game, col, eval))
+    }
+}
 
 struct BestMoves {
     cols: Vec<Col>,
@@ -39,20 +47,14 @@ impl BestMoves {
         self
     }
     fn get_random_col_eval(&self) -> Option<(Col, Eval)> {
-        use rand::Rng;
+        // use rand::Rng;
         match (self.cols.len(), self.eval.clone()) {
             (0, None) => None,
             // (len, Some(eval)) => Some((self.cols[rand::thread_rng().gen_range(0, len)], eval)),
-            (len, Some(eval)) => Some((self.cols[0], eval)),
-            _ => None
+            (_len, Some(eval)) => Some((self.cols[0], eval)),
+            _ => None,
         }
     }
-}
-
-pub fn get_best_move(game: Game) -> Result<(Game, Col, Eval), Game> {
-    let (game, col, eval) = generate_step(game, DEPTH)?;
-    let eval = eval.invert();
-    Ok((game, col, eval))
 }
 
 fn generate_step(game: Game, pend_steps: u8) -> Result<(Game, Col, Eval), Game> {
@@ -62,9 +64,10 @@ fn generate_step(game: Game, pend_steps: u8) -> Result<(Game, Col, Eval), Game> 
             let bm = game_bm.1;
             let col = Col(c);
             game_bm = match move_col(game_bm.0, col, pend_steps) {
-                 Ok((game, eval)) =>  {
-                        (game.undo()?, bm.process_move(col, &eval))
-                 },
+                Ok((game, eval)) => {
+                    println!("{:?} {} {:?}", game.moves, col, eval);
+                    (game.undo()?, bm.process_move(col, &eval))
+                }
                 Err(game) => (game, bm),
             };
         }

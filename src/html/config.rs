@@ -11,8 +11,9 @@ pub struct Model {
 
 pub enum Msg {
     ChangeFirstPlayer,
-    ComputerPlays,
-    TwoHumans,
+    PlayersComputerPlays,
+    PlayersTwoHumans,
+    PlayersAnalisys,
     ComputerColorChange,
     StartGame,
 }
@@ -51,8 +52,11 @@ impl Component for Model {
         };
         match msg {
             Msg::ChangeFirstPlayer => self.config.start = switch_player(self.config.start),
-            Msg::ComputerPlays => self.config.players = ConfigPlayers::CMachine(engine::Player::O),
-            Msg::TwoHumans => self.config.players = ConfigPlayers::TwoPlayers,
+            Msg::PlayersComputerPlays => {
+                self.config.players = ConfigPlayers::CMachine(engine::Player::O)
+            }
+            Msg::PlayersTwoHumans => self.config.players = ConfigPlayers::TwoPlayers,
+            Msg::PlayersAnalisys => self.config.players = ConfigPlayers::Analisys,
             Msg::ComputerColorChange => computer_color_change(),
             Msg::StartGame => {
                 if let Some(ref mut callback) = self.onstart {
@@ -85,11 +89,9 @@ impl Renderable<Model> for Model {
         };
         let option_players = || {
             let machine_plays = || {
-                if let ConfigPlayers::CMachine(_) = self.config.players {
-                    true
-                } else {
-                    false
-                }
+                use std::mem::discriminant;
+                discriminant(&ConfigPlayers::CMachine(engine::Player::O))
+                    == discriminant(&self.config.players)
             };
             html! {
                 <>
@@ -98,8 +100,9 @@ impl Renderable<Model> for Model {
                 </td>
                 <td>
                     <select>
-                    <option value="I play", selected={machine_plays()}, onclick=|_| Msg::ComputerPlays,>{"I play"}</option>
-                    <option value="two players", selected={!machine_plays()}, onclick=|_| Msg::TwoHumans,>{"two players"}</option>
+                    <option value="I play", selected={machine_plays()}, onclick=|_| Msg::PlayersComputerPlays,>{"I play"}</option>
+                    <option value="two players", selected={self.config.players == ConfigPlayers::TwoPlayers}, onclick=|_| Msg::PlayersTwoHumans,>{"two players"}</option>
+                    <option value="analisys", selected={self.config.players == ConfigPlayers::Analisys}, onclick=|_| Msg::PlayersAnalisys,>{"analisys"}</option>
                     </select>
                 </td>
                 </>

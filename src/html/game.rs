@@ -3,6 +3,8 @@ use crate::{idata, yew, Config, ConfigPlayers};
 use yew::prelude::*;
 // use yew::services::ConsoleService;
 
+const DEPTH: u8 = 2;
+
 pub struct Model {
     // console: ConsoleService,
     game: engine::Game,
@@ -11,6 +13,12 @@ pub struct Model {
 
 pub enum Msg {
     Click(u8),
+    A(MsgAnalisys),
+}
+
+pub enum MsgAnalisys {
+    MoveBack,
+    ComputerPlay,
 }
 
 #[derive(PartialEq, Clone)]
@@ -43,6 +51,12 @@ impl Component for Model {
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        let computer_move = |game: &mut engine::Game, depth| {
+            idata::steal_borrow(game, &|s: engine::Game| match computer_play(s, depth) {
+                Ok(game) => game,
+                Err(game) => game,
+            })
+        };
         let try_play = |game: &mut engine::Game, c, config: &Config| {
             if let Some(col) = engine::Col::b(c) {
                 idata::steal_borrow(game, &|s: engine::Game| match s.play(col) {
@@ -51,9 +65,17 @@ impl Component for Model {
                 })
             }
         };
+        let move_back = |game: &mut engine::Game| {
+            idata::steal_borrow(game, &|s: engine::Game| match s.undo() {
+                Ok(game) => game,
+                Err(game) => game,
+            })
+        };
 
         match msg {
             Msg::Click(col) => try_play(&mut self.game, col, &self.config),
+            Msg::A(MsgAnalisys::ComputerPlay) => computer_move(&mut self.game, DEPTH),
+            Msg::A(MsgAnalisys::MoveBack) => move_back(&mut self.game),
         };
 
         true
@@ -148,10 +170,28 @@ impl Renderable<Model> for Model {
                 </>
             }
         };
+        let analisys = || {
+            if self.config.players == ConfigPlayers::Analisys {
+                html! {
+                    <>
+                    <p>
+                        <button onclick=|_| Msg::A(MsgAnalisys::MoveBack),>{"back"}</button>
+                        <button onclick=|_| Msg::A(MsgAnalisys::ComputerPlay),>{"computer move"}</button>
+                    </p>
+                    </>
+                }
+            } else {
+                html! {
+                    <>
+                    </>
+                }
+            }
+        };
 
         html! {
             <div class="game",>
                 {board()}
+            </div>{analisys()}</div>
             </div>{moves()}</div>
             </div>{pattern_count()}</div>
             </div>
@@ -164,12 +204,10 @@ fn move_computer_if_turn(game: engine::Game, config: &Config) -> engine::Game {
         engine::Turn::P(_) => false,
         engine::Turn::F(_) => true,
     };
+
     let rgame = if let ConfigPlayers::CMachine(mp) = config.players {
         if (game.moves.len() % 2 == 0) == (config.start == mp) && !finished_game {
-            match crate::engine::minmax::get_best_move(game) {
-                Ok((game, col, _eval)) => game.play(col),
-                Err(_game) => unreachable!(),
-            }
+            computer_play(game, DEPTH)
         } else {
             Ok(game)
         }
@@ -181,4 +219,9 @@ fn move_computer_if_turn(game: engine::Game, config: &Config) -> engine::Game {
         Ok(game) => game,
         Err(_) => unreachable!(),
     }
+}
+
+fn computer_play(game: engine::Game, depth: u8) -> std::result::Result<engine::Game, engine::Game> {
+    let (game, best_move, _eval) = crate::engine::minmax::get_best_move(game, depth)?;
+    game.play(best_move)
 }

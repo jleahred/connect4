@@ -1,15 +1,15 @@
-extern crate connect4;
-extern crate idata;
-extern crate yew;
+// extern crate connect4;
+// extern crate idata;
+// extern crate yew;
 
-use connect4::Model;
-use yew::prelude::*;
+// use connect4::Model;
+// use yew::prelude::*;
 
-fn main() {
-    yew::initialize();
-    App::<Model>::new().mount_to_body();
-    yew::run_loop();
-}
+// fn main() {
+//     yew::initialize();
+//     App::<Model>::new().mount_to_body();
+//     yew::run_loop();
+// }
 
 // extern crate connect4;
 
@@ -18,64 +18,47 @@ fn main() {
 // use connect4::engine::patterns::PatternsCountPonderation as PCP;
 // use connect4::engine::*;
 
-// const HALF_GAMES_PER_MATCH: u32 = 1;
+// const HALF_GAMES_PER_MATCH: u32 = 2;
+// const DEPTH: u8 = 2;
+// const PCPP_INIT_CONF: PCPP = PCPP {
+//     player_current: PCP {
+//         next_move_wins: 1.0,
+//         imposible_avoid: 10.0,
+//         vert_consecutive_hole_3inline: 5.0,
+//         line3: 1.0,
+//         line2: 0.1,
+//         line1: 0.01,
+//     },
+//     player_other: PCP {
+//         next_move_wins: 100.0,
+//         imposible_avoid: 10.0,
+//         vert_consecutive_hole_3inline: 5.0,
+//         line3: 1.0,
+//         line2: 0.1,
+//         line1: 0.01,
+//     },
+// };
+// // const PCPP_INIT_CONF: PCPP = PCPP {
+// //     player_current: PCP {
+// //         next_move_wins: 0.0,
+// //         imposible_avoid: 0.0,
+// //         vert_consecutive_hole_3inline: 0.0,
+// //         line3: 0.0,
+// //         line2: 0.0,
+// //         line1: 0.0,
+// //     },
+// //     player_other: PCP {
+// //         next_move_wins: 0.0,
+// //         imposible_avoid: 0.0,
+// //         vert_consecutive_hole_3inline: 0.0,
+// //         line3: 0.0,
+// //         line2: 0.0,
+// //         line1: 0.0,
+// //     },
+// // };
 
 // fn main() {
-//     let pcpp_winner = PCPP {
-//         player_current: PCP {
-//             next_move_wins: 1.0,
-//             imposible_avoid: 55.5,
-//             vert_consecutive_hole_3inline: 0.3,
-//             line3: 0.1,
-//             line2: 0.01,
-//             line1: 0.001,
-//         },
-//         player_other: PCP {
-//             next_move_wins: 100.0,
-//             imposible_avoid: 55.5,
-//             vert_consecutive_hole_3inline: 0.3,
-//             line3: 0.1,
-//             line2: 0.01,
-//             line1: 0.001,
-//         },
-//     };
-
-//     // let pcpp_winner = PCPP {
-//     //     player_current: PCP {
-//     //         next_move_wins: 82.99,
-//     //         imposible_avoid: 40.99,
-//     //         vert_consecutive_hole_3inline: 66.39,
-//     //         line3: 53.97,
-//     //         line2: 58.12,
-//     //         line1: 22.32,
-//     //     },
-//     //     player_other: PCP {
-//     //         next_move_wins: 63.83,
-//     //         imposible_avoid: 31.88,
-//     //         vert_consecutive_hole_3inline: 62.24,
-//     //         line3: 32.98,
-//     //         line2: 63.29,
-//     //         line1: 86.85,
-//     //     },
-//     // };
-//     // let pcpp_loser = PCPP {
-//     //     player_current: PCP {
-//     //         next_move_wins: 47.62,
-//     //         imposible_avoid: 25.69,
-//     //         vert_consecutive_hole_3inline: 52.06,
-//     //         line3: 50.33,
-//     //         line2: 68.73,
-//     //         line1: 28.51,
-//     //     },
-//     //     player_other: PCP {
-//     //         next_move_wins: 86.61,
-//     //         imposible_avoid: 86.9,
-//     //         vert_consecutive_hole_3inline: 47.49,
-//     //         line3: 76.02,
-//     //         line2: 35.01,
-//     //         line1: 50.07,
-//     //     },
-//     // };
+//     let pcpp_winner = PCPP_INIT_CONF;
 
 //     let rand_pcpp = || {
 //         let rand_pcp = || PCP {
@@ -92,8 +75,18 @@ fn main() {
 //             player_other: rand_pcp(),
 //         }
 //     };
+//     // let rand_pcpp = || {
+//     //     let mut result = PCPP_INIT_CONF;
+//     //     result.player_current.next_move_wins =
+//     //         f64::from(rand::thread_rng().gen_range(0, 10_000)) / 100.0 - 50.0;
+//     //     result.player_other.next_move_wins =
+//     //         f64::from(rand::thread_rng().gen_range(0, 10_000)) / 100.0 - 50.0;
+//     //     result
+//     // };
 
 //     use rand::Rng;
+//     use std::io;
+//     use std::io::prelude::Write;
 //     let mut pcpp_winner_pos = (pcpp_winner, 0);
 //     // println!("    >> provisional winner: {:#?}", pcpp_winner_pos.0);
 //     for i in 0..10_000_000 {
@@ -104,9 +97,11 @@ fn main() {
 //                 " <{}>   ({})>> provisional winner: {:#?}",
 //                 pcpp_winner_pos.1, i, pcpp_winner_pos.0
 //             );
+//             panic!("stoped");
+//         } else if pcpp_winner_pos.1 == 0 {
+//             print!("=");
+//             io::stdout().flush().expect("Could not flush stdout");
 //         } else {
-//             use std::io;
-//             use std::io::prelude::Write;
 //             print!(".");
 //             io::stdout().flush().expect("Could not flush stdout");
 //         }
@@ -156,7 +151,7 @@ fn main() {
 //     let game2 = Game::new(Player::O).set_patterns_pond(pcpp2.clone());
 
 //     fn rec_move(game1: Game, game2: Game) -> (Game, Game) {
-//         match minmax::get_best_move(game1) {
+//         match minmax::get_best_move(game1, DEPTH) {
 //             Ok((game1, col, _eval)) => {
 //                 let game1 = game1.try_play(col);
 //                 let game2 = game2.try_play(col);
@@ -168,10 +163,80 @@ fn main() {
 
 //     let (game1, _game2) = rec_move(game1, game2);
 
-//     match game1.turn {
-//         Turn::F(Finished::Won(Player::O)) => PccpWinner::First,
-//         Turn::F(Finished::Won(Player::X)) => PccpWinner::Second,
-//         Turn::F(Finished::Draw(_)) => PccpWinner::Draw,
+//     match (game1.moves.len() > 30, game1.turn) {
+//         (true, _) => (),
+//         (false, Turn::F(Finished::Won(Player::O))) => {
+//             println!("moves: {:?}\n{}", game1.moves, game1.board)
+//         }
+//         (false, Turn::F(Finished::Won(Player::X))) => {
+//             println!("moves: {:?}\n{}", game1.moves, game1.board)
+//         }
+//         (false, Turn::F(Finished::Draw(_))) => (),
+//         _ => unreachable!(),
+//     };
+
+//     match (game1.moves.len() > 36, game1.turn) {
+//         (true, _) => PccpWinner::Draw,
+//         (false, Turn::F(Finished::Won(Player::O))) => PccpWinner::First,
+//         (false, Turn::F(Finished::Won(Player::X))) => PccpWinner::Second,
+//         (false, Turn::F(Finished::Draw(_))) => PccpWinner::Draw,
 //         _ => unreachable!(),
 //     }
 // }
+
+extern crate connect4;
+
+use connect4::engine::minmax;
+use connect4::engine::patterns::PatternsCountPlayerPonderation as PCPP;
+use connect4::engine::patterns::PatternsCountPonderation as PCP;
+use connect4::engine::*;
+
+const DEPTH: u8 = 2;
+// const PCPP_INIT_CONF: PCPP = PCPP {
+//     player_current: PCP {
+//         next_move_wins: 1.0,
+//         imposible_avoid: 10.0,
+//         vert_consecutive_hole_3inline: 5.0,
+//         line3: 1.0,
+//         line2: 0.1,
+//         line1: 0.01,
+//     },
+//     player_other: PCP {
+//         next_move_wins: 100.0,
+//         imposible_avoid: 10.0,
+//         vert_consecutive_hole_3inline: 5.0,
+//         line3: 1.0,
+//         line2: 0.1,
+//         line1: 0.01,
+//     },
+// };
+
+fn main() {
+    let play_col = |game: Game, col| -> Game {
+        match game.play(Col::b(col).unwrap()) {
+            Ok(game) => game,
+            _ => panic!("error processing move"),
+        }
+    };
+
+    let game = Game::new(Player::O);
+    let game = play_col(game, 3);
+    let game = play_col(game, 3);
+    let game = play_col(game, 2);
+    let game = play_col(game, 4);
+    let game = play_col(game, 3);
+    let game = play_col(game, 4);
+    let game = play_col(game, 3);
+    let game = play_col(game, 2);
+    let game = play_col(game, 2);
+    let game = play_col(game, 2);
+    let game = play_col(game, 0);
+    let game = play_col(game, 0);
+
+    println!("{}", game);
+
+    match minmax::get_best_move(game, DEPTH) {
+        Ok((_game, col, _eval)) => println!("{:?}", col),
+        _ => (),
+    }
+}

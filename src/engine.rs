@@ -15,21 +15,39 @@ fn pattern_ponderation() -> PCPP {
     PCPP {
         player_current: PCP {
             next_move_wins: 1.0,
-            imposible_avoid: 55.5,
-            vert_consecutive_hole_3inline: 0.3,
-            line3: 0.1,
-            line2: 0.01,
-            line1: 0.001,
+            imposible_avoid: 10.0,
+            vert_consecutive_hole_3inline: 5.0,
+            line3: 1.0,
+            line2: 0.1,
+            line1: 0.01,
         },
         player_other: PCP {
             next_move_wins: 100.0,
-            imposible_avoid: 55.5,
-            vert_consecutive_hole_3inline: 0.3,
-            line3: 0.1,
-            line2: 0.01,
-            line1: 0.001,
+            imposible_avoid: 10.0,
+            vert_consecutive_hole_3inline: 5.0,
+            line3: 1.0,
+            line2: 0.1,
+            line1: 0.01,
         },
     }
+    // PCPP {
+    //     player_current: PCP {
+    //         next_move_wins: 1.0,
+    //         imposible_avoid: 55.5,
+    //         vert_consecutive_hole_3inline: 0.3,
+    //         line3: 0.1,
+    //         line2: 0.01,
+    //         line1: 0.001,
+    //     },
+    //     player_other: PCP {
+    //         next_move_wins: 100.0,
+    //         imposible_avoid: 55.5,
+    //         vert_consecutive_hole_3inline: 0.3,
+    //         line3: 0.1,
+    //         line2: 0.01,
+    //         line1: 0.001,
+    //     },
+    // }
 }
 
 /// Abstract type with game status
