@@ -22,6 +22,7 @@ pub enum Model {
 
 pub enum Msg {
     StartGame(Config),
+    NewGame(()),
 }
 
 //  ----------
@@ -58,6 +59,7 @@ impl Component for Model {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             Msg::StartGame(cfg) => std::mem::swap(self, &mut Model::Game(cfg)),
+            Msg::NewGame(()) => std::mem::swap(self, &mut Model::Config),
         }
         true
     }
@@ -70,7 +72,7 @@ impl Renderable<Model> for Model {
                 <><HConfig:  onstart= Msg::StartGame,/></>
             },
             Model::Game(cfg) => html! {
-                <><HGame: config=cfg, /></>
+                <><HGame: config=cfg, on_new_game= Msg::NewGame,/></>
             },
         };
 

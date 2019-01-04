@@ -8,7 +8,7 @@ Connect 4 game 100% web client (developed with rust/yew)
 
 ![connect4](./connect4.png "Connect4")
 
-I thought about doing this program a long, long time ago, in a far galaxy.
+I thought about doing this program a long, long time ago, in a far, far galaxy.
 
 It's a simple game, but a realistic program to solve non-trivial problems.
 
@@ -28,6 +28,8 @@ But I thought it was a good exercise to evaluate Rust.
 
 So I try Rust and yew, I try wasm and asm.js, and at the same time, I remove this small program from the list of pending.
 
-I want the machine to play very well without promoting the greenhouse effect or a large electricity consumption (as much as possible, since it is executed in the browser).
+I want the machine to play very without promoting the greenhouse effect or a large electricity consumption (as much as possible, since it is executed in the browser).
+
+The engine will be simple, it's not the main subject on this exercise
 
 (link to the program)

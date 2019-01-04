@@ -1,19 +1,28 @@
 use crate::engine;
 use crate::{idata, yew, Config, ConfigPlayers};
+use std::time::Duration;
 use yew::prelude::*;
 // use yew::services::ConsoleService;
+use yew::services::{Task, TimeoutService};
 
-const DEPTH: u8 = 2;
+const DEPTH: u8 = 4;
 
 pub struct Model {
     // console: ConsoleService,
     game: engine::Game,
     config: Config,
+
+    timeout: TimeoutService,
+    job: Option<Box<Task>>,
+    on_new_game: Option<Callback<()>>,
+    callback_comp_move: Callback<()>,
 }
 
 pub enum Msg {
     Click(u8),
     A(MsgAnalisys),
+    NewGame,
+    ComputerMove,
 }
 
 pub enum MsgAnalisys {
@@ -24,7 +33,7 @@ pub enum MsgAnalisys {
 #[derive(PartialEq, Clone)]
 pub struct Properties {
     pub config: Config,
-    // pub onnewgame: Option<Callback<(Config)>>,
+    pub on_new_game: Option<Callback<()>>,
 }
 
 //  ----------
@@ -33,21 +42,42 @@ impl Default for Properties {
     fn default() -> Self {
         Properties {
             config: Config::init(),
+            on_new_game: None,
         }
     }
 }
 
-impl Model {}
-
+impl Model {
+    fn program_computer_move(mut self) -> Self {
+        {
+            let handle = self
+                .timeout
+                .spawn(Duration::from_millis(100), self.callback_comp_move.clone());
+            self.job = Some(Box::new(handle));
+        }
+        self
+    }
+}
 impl Component for Model {
     type Message = Msg;
     type Properties = Properties;
 
-    fn create(p: Self::Properties, _: ComponentLink<Self>) -> Self {
+    fn create(p: Self::Properties, mut link: ComponentLink<Self>) -> Self {
         let game = engine::Game::new(p.config.start);
         let config = p.config;
-        let game = move_computer_if_turn(game, &config);
-        Model { game, config }
+        let result = Model {
+            game,
+            config,
+            timeout: TimeoutService::new(),
+            job: None,
+            on_new_game: p.on_new_game,
+            callback_comp_move: link.send_back(|_| Msg::ComputerMove),
+        };
+        if is_computer_turn(&result.game, &result.config) {
+            result.program_computer_move()
+        } else {
+            result
+        }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
@@ -57,10 +87,10 @@ impl Component for Model {
                 Err(game) => game,
             })
         };
-        let try_play = |game: &mut engine::Game, c, config: &Config| {
+        let try_play = |game: &mut engine::Game, c| {
             if let Some(col) = engine::Col::b(c) {
                 idata::steal_borrow(game, &|s: engine::Game| match s.play(col) {
-                    Ok(game) => move_computer_if_turn(game, config),
+                    Ok(game) => game,
                     Err(game) => game,
                 })
             }
@@ -73,14 +103,25 @@ impl Component for Model {
         };
 
         match msg {
-            Msg::Click(col) => try_play(&mut self.game, col, &self.config),
+            Msg::Click(col) => {
+                try_play(&mut self.game, col);
+                if is_computer_turn(&self.game, &self.config) {
+                    idata::steal_borrow(self, &|s: Self| s.program_computer_move())
+                }
+            }
             Msg::A(MsgAnalisys::ComputerPlay) => computer_move(&mut self.game, DEPTH),
             Msg::A(MsgAnalisys::MoveBack) => move_back(&mut self.game),
+            Msg::NewGame => {
+                if let Some(ref mut callback) = self.on_new_game {
+                    callback.emit(())
+                }
+            }
+            Msg::ComputerMove => computer_move(&mut self.game, DEPTH),
         };
 
         true
     }
-    fn change(&mut self, Self::Properties { config }: Self::Properties) -> ShouldRender {
+    fn change(&mut self, Self::Properties { config, .. }: Self::Properties) -> ShouldRender {
         if config != self.config {
             self.config = config;
             true
@@ -140,23 +181,6 @@ impl Renderable<Model> for Model {
             }
         };
 
-        let pattern_count = || {
-            let get_pos_eval = || format!("{:?}", self.game.eval());
-            let get_pattern_debug_txt = || match &self.game.patterns {
-                crate::engine::patterns::Patterns::P(pcp) => {
-                    (format!("{:?}", pcp.player_o), format!("{:?}", pcp.player_x))
-                }
-                _ => ("".to_string(), "".to_string()),
-            };
-            html! {
-                <>
-                <p>{get_pos_eval()}</p>
-                <p>{get_pattern_debug_txt().0}</p>
-                <p>{get_pattern_debug_txt().1}</p>
-                </>
-            }
-        };
-
         let moves = || {
             let moves_string = || -> String {
                 self.game
@@ -171,6 +195,22 @@ impl Renderable<Model> for Model {
             }
         };
         let analisys = || {
+            let pattern_count = || {
+                let get_pos_eval = || format!("{:?}", self.game.eval());
+                let get_pattern_debug_txt = || match &self.game.patterns {
+                    crate::engine::patterns::Patterns::P(pcp) => {
+                        (format!("{:?}", pcp.player_o), format!("{:?}", pcp.player_x))
+                    }
+                    _ => ("".to_string(), "".to_string()),
+                };
+                html! {
+                    <>
+                    <p>{get_pos_eval()}</p>
+                    <p>{get_pattern_debug_txt().0}</p>
+                    <p>{get_pattern_debug_txt().1}</p>
+                    </>
+                }
+            };
             if self.config.players == ConfigPlayers::Analisys {
                 html! {
                     <>
@@ -178,46 +218,47 @@ impl Renderable<Model> for Model {
                         <button onclick=|_| Msg::A(MsgAnalisys::MoveBack),>{"back"}</button>
                         <button onclick=|_| Msg::A(MsgAnalisys::ComputerPlay),>{"computer move"}</button>
                     </p>
+                    </div>{pattern_count()}</div>
                     </>
                 }
             } else {
-                html! {
-                    <>
-                    </>
-                }
+                html! {<></>}
             }
+        };
+
+        let winner = || match self.game.turn {
+            crate::engine::Turn::F(_) => html! {
+                <>
+                <p>
+                    <div>{"We have a winner"}</div>
+                    <button onclick=|_| Msg::NewGame,>{"new game"}</button>
+                </p>
+                </>
+            },
+            _ => html! {<></>},
         };
 
         html! {
             <div class="game",>
+            </div>{winner()}</div>
                 {board()}
             </div>{analisys()}</div>
             </div>{moves()}</div>
-            </div>{pattern_count()}</div>
             </div>
         }
     }
 }
 
-fn move_computer_if_turn(game: engine::Game, config: &Config) -> engine::Game {
+fn is_computer_turn(game: &engine::Game, config: &Config) -> bool {
     let finished_game = match game.turn {
         engine::Turn::P(_) => false,
         engine::Turn::F(_) => true,
     };
 
-    let rgame = if let ConfigPlayers::CMachine(mp) = config.players {
-        if (game.moves.len() % 2 == 0) == (config.start == mp) && !finished_game {
-            computer_play(game, DEPTH)
-        } else {
-            Ok(game)
-        }
+    if let ConfigPlayers::CMachine(mp) = config.players {
+        (game.moves.len() % 2 == 0) == (config.start == mp) && !finished_game
     } else {
-        Ok(game)
-    };
-
-    match rgame {
-        Ok(game) => game,
-        Err(_) => unreachable!(),
+        false
     }
 }
 

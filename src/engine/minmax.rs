@@ -55,6 +55,12 @@ impl BestMoves {
             _ => None,
         }
     }
+    fn game_won(&self) -> bool {
+        match self.eval {
+            Some(Eval::Winner) => true,
+            _ => false,
+        }
+    }
 }
 
 fn generate_step(game: Game, pend_steps: u8) -> Result<(Game, Col, Eval), Game> {
@@ -65,11 +71,15 @@ fn generate_step(game: Game, pend_steps: u8) -> Result<(Game, Col, Eval), Game> 
             let col = Col(c);
             game_bm = match move_col(game_bm.0, col, pend_steps) {
                 Ok((game, eval)) => {
-                    println!("{:?} {} {:?}", game.moves, col, eval);
+                    // println!("{:?} {} {:?}", game.moves, col, eval);
                     (game.undo()?, bm.process_move(col, &eval))
                 }
                 Err(game) => (game, bm),
             };
+            if game_bm.1.game_won() {
+                // println!("moves__ :  {:?}", game_bm.0.moves);
+                break;
+            }
         }
         game_bm
     };
