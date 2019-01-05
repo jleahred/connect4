@@ -5,7 +5,7 @@ use yew::prelude::*;
 // use yew::services::ConsoleService;
 use yew::services::{Task, TimeoutService};
 
-const DEPTH: u8 = 4;
+const DEPTH: u8 = 3;
 
 pub struct Model {
     // console: ConsoleService,
