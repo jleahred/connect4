@@ -1,4 +1,4 @@
-// extern crate stdweb;
+extern crate stdweb;
 
 pub mod engine;
 

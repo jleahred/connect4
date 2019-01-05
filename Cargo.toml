@@ -5,7 +5,13 @@ authors = ["maiquel <jleahred@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-#stdweb = "0.4.12"
+stdweb = "0.4.12"
 yew = { git = "https://github.com/DenisKolodin/yew" }
 idata = { git = "https://github.com/jleahred/idata.git" }
-rand = "0.4.0"
+
+# rand = "0.4.0"
+# rand = "0.6"
+# rand = { git = "https://github.com/rust-lang-nursery/rand", features = ["stdweb"] }
+# rand = { version = "0.6", features = ["stdweb"]}
+# rand = { version = "0.6", features = ["wasm-bindgen"]}
+

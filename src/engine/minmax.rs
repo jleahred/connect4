@@ -50,8 +50,13 @@ impl BestMoves {
         // use rand::Rng;
         match (self.cols.len(), self.eval.clone()) {
             (0, None) => None,
-            // (len, Some(eval)) => Some((self.cols[rand::thread_rng().gen_range(0, len)], eval)),
-            (_len, Some(eval)) => Some((self.cols[0], eval)),
+            // (len, Some(eval)) =>
+            // Some((self.cols[rand::thread_rng().gen_range(0, len)], eval)),
+            // (_len, Some(eval)) => Some((self.cols[0], eval)),
+            (len, Some(eval)) => Some((
+                self.cols[stdweb::web::Date::new().get_milliseconds() as usize % len],
+                eval,
+            )),
             _ => None,
         }
     }
