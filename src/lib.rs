@@ -32,20 +32,37 @@ pub struct Config {
     start: engine::Player,
     players: ConfigPlayers,
 }
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum Level {
+    Mosquito,
+    WeakMind,
+    Easy,
+}
+
 impl Config {
     fn init() -> Self {
         Config {
             start: engine::Player::O,
-            players: ConfigPlayers::CMachine(engine::Player::O),
+            players: ConfigPlayers::CMachine(ConfigMachine {
+                machine_player: engine::Player::O,
+                level: Level::Easy,
+            }),
         }
     }
 }
 
-#[derive(PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 enum ConfigPlayers {
-    CMachine(engine::Player),
+    CMachine(ConfigMachine),
     TwoPlayers,
     Analisys,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+struct ConfigMachine {
+    machine_player: engine::Player,
+    level: Level,
 }
 
 impl Component for Model {

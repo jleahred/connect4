@@ -1,8 +1,6 @@
 # connect 4
 
-Coming soon... (link to program)
-
-**ON DEVELOP**
+link to game: <http://jleahred.github.io/apps/connect4/index.html>
 
 Connect 4 game 100% web client (developed with rust/yew)
 
@@ -32,4 +30,4 @@ I want the machine to play very without promoting the greenhouse effect or a lar
 
 The engine will be simple, it's not the main subject on this exercise
 
-(link to the program)
+link to game: <http://jleahred.github.io/apps/connect4/index.html>

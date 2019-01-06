@@ -1,11 +1,9 @@
 use crate::engine;
-use crate::{idata, yew, Config, ConfigPlayers};
+use crate::{idata, yew, Config, ConfigPlayers, Level};
 use std::time::Duration;
 use yew::prelude::*;
 // use yew::services::ConsoleService;
 use yew::services::{Task, TimeoutService};
-
-const DEPTH: u8 = 3;
 
 pub struct Model {
     // console: ConsoleService,
@@ -57,6 +55,18 @@ impl Model {
         }
         self
     }
+
+    fn get_depth(&self) -> u8 {
+        let level = match self.config.players {
+            ConfigPlayers::CMachine(ref cm) => cm.level,
+            _ => Level::Easy,
+        };
+        match level {
+            Level::Easy => 4,
+            Level::WeakMind => 4,
+            Level::Mosquito => 3,
+        }
+    }
 }
 impl Component for Model {
     type Message = Msg;
@@ -102,6 +112,7 @@ impl Component for Model {
             })
         };
 
+        let depth = self.get_depth();
         match msg {
             Msg::Click(col) => {
                 try_play(&mut self.game, col);
@@ -109,14 +120,14 @@ impl Component for Model {
                     idata::steal_borrow(self, &|s: Self| s.program_computer_move())
                 }
             }
-            Msg::A(MsgAnalisys::ComputerPlay) => computer_move(&mut self.game, DEPTH),
+            Msg::A(MsgAnalisys::ComputerPlay) => computer_move(&mut self.game, depth),
             Msg::A(MsgAnalisys::MoveBack) => move_back(&mut self.game),
             Msg::NewGame => {
                 if let Some(ref mut callback) = self.on_new_game {
                     callback.emit(())
                 }
             }
-            Msg::ComputerMove => computer_move(&mut self.game, DEPTH),
+            Msg::ComputerMove => computer_move(&mut self.game, depth),
         };
 
         true
@@ -191,6 +202,7 @@ impl Renderable<Model> for Model {
             html! {
                 <>
                 <p>{moves_string()}</p>
+                // <p>{format!("{:?}", self.config.players)}</p>
                 </>
             }
         };
@@ -230,7 +242,7 @@ impl Renderable<Model> for Model {
             crate::engine::Turn::F(_) => html! {
                 <>
                 <p>
-                    <div>{"We have a winner"}</div>
+                    <div>{"Game over!!!"}</div>
                     <button onclick=|_| Msg::NewGame,>{"new game"}</button>
                 </p>
                 </>
@@ -255,8 +267,8 @@ fn is_computer_turn(game: &engine::Game, config: &Config) -> bool {
         engine::Turn::F(_) => true,
     };
 
-    if let ConfigPlayers::CMachine(mp) = config.players {
-        (game.moves.len() % 2 == 0) == (config.start == mp) && !finished_game
+    if let ConfigPlayers::CMachine(ref mc) = config.players {
+        (game.moves.len() % 2 == 0) == (config.start == mc.machine_player) && !finished_game
     } else {
         false
     }
