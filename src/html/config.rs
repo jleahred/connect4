@@ -59,7 +59,7 @@ impl Component for Model {
             Msg::PlayersComputerPlays => {
                 self.config.players = ConfigPlayers::CMachine(ConfigMachine {
                     machine_player: engine::Player::O,
-                    level: Level::Easy,
+                    level: Level::Mosquito,
                 })
             }
             Msg::PlayersTwoHumans => self.config.players = ConfigPlayers::TwoPlayers,

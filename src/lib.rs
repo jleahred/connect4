@@ -46,7 +46,7 @@ impl Config {
             start: engine::Player::O,
             players: ConfigPlayers::CMachine(ConfigMachine {
                 machine_player: engine::Player::O,
-                level: Level::Easy,
+                level: Level::Mosquito,
             }),
         }
     }
