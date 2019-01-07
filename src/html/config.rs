@@ -110,7 +110,7 @@ impl Renderable<Model> for Model {
                 </td>
                 <td>
                     <select>
-                    <option value="I play", selected={machine_plays()}, onclick=|_| Msg::PlayersComputerPlays,>{"I play"}</option>
+                    <option value="I play", selected={machine_plays()}, onclick=|_| Msg::PlayersComputerPlays,>{"play with me"}</option>
                     <option value="two players", selected={self.config.players == ConfigPlayers::TwoPlayers}, onclick=|_| Msg::PlayersTwoHumans,>{"two players"}</option>
                     // <option value="analisys", selected={self.config.players == ConfigPlayers::Analisys}, onclick=|_| Msg::PlayersAnalisys,>{"analisys"}</option>
                     </select>
